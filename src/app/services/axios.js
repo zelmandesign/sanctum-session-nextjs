@@ -8,17 +8,17 @@ const axios = axiosLib.create({
         'X-Requested-With': 'XMLHttpRequest',
         'Accept': 'application/json',
     },
-    withCredentials: true, // allow sending cookies
-    withXSRFToken: true,
 });
 
+// Ensure cookies are sent with requests by default
+axios.defaults.withCredentials = true;
+
 axios.interceptors.request.use(async (config) => {
-    // Safely access method with a default fallback
-    if ((config.method || '').toLowerCase() !== 'get' && !Cookies.get('XSRF-TOKEN')) {
-        await axios.get('/sanctum/csrf-cookie');
-        //config.headers['X-XSRF-TOKEN'] = Cookies.get('XSRF-TOKEN');
+    // Only fetch CSRF token if the request is not GET
+    if ((config.method || '').toLowerCase() !== 'get') {
+        await axios.get('/sanctum/csrf-cookie');  // Match the Vue path for CSRF token retrieval
+        config.headers['X-XSRF-TOKEN'] = Cookies.get('XSRF-TOKEN');  // Set CSRF token header
     }
-    config.headers['X-XSRF-TOKEN'] = Cookies.get('XSRF-TOKEN');
     return config;
 });
 
